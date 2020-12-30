@@ -1,10 +1,7 @@
 import Head from "next/head";
 import { renderMetaTags, useQuerySubscription } from "react-datocms";
-import Container from "../components/container";
-import HeroPost from "../components/hero-post";
-import Intro from "../components/intro";
-import Layout from "../components/layout";
-import MoreStories from "../components/more-stories";
+import { Container, Flex, Grid } from "theme-ui";
+import { WorkPreview, Layout } from "../components";
 import { request } from "../lib/datocms";
 import { metaTagsFragment, responsiveImageFragment } from "../lib/fragments";
 
@@ -17,12 +14,7 @@ export async function getStaticProps({ preview }) {
             ...metaTagsFragment
           }
         }
-        blog {
-          seo: _seoMetaTags {
-            ...metaTagsFragment
-          }
-        }
-        allPosts(orderBy: date_DESC, first: 20) {
+        allWorks(orderBy: date_DESC, first: 20) {
           title
           slug
           excerpt
@@ -32,12 +24,6 @@ export async function getStaticProps({ preview }) {
               ...responsiveImageFragment
             }
           }
-          author {
-            name
-            picture {
-              url(imgixParams: {fm: jpg, fit: crop, w: 100, h: 100, sat: -100})
-            }
-          }
         }
       }
 
@@ -45,6 +31,7 @@ export async function getStaticProps({ preview }) {
       ${responsiveImageFragment}
     `,
     preview,
+    variables: undefined,
   };
 
   return {
@@ -65,30 +52,26 @@ export async function getStaticProps({ preview }) {
 
 export default function Index({ subscription }) {
   const {
-    data: { allPosts, site, blog },
+    data: { allWorks, site },
   } = useQuerySubscription(subscription);
 
-  const heroPost = allPosts[0];
-  const morePosts = allPosts.slice(1);
-  const metaTags = blog.seo.concat(site.favicon);
+  // const metaTags = blog.seo.concat(site.favicon);
 
   return (
     <>
       <Layout preview={subscription.preview}>
-        <Head>{renderMetaTags(metaTags)}</Head>
+        {/* <Head>{renderMetaTags(metaTags)}</Head> */}
         <Container>
-          <Intro />
-          {heroPost && (
-            <HeroPost
-              title={heroPost.title}
-              coverImage={heroPost.coverImage}
-              date={heroPost.date}
-              author={heroPost.author}
-              slug={heroPost.slug}
-              excerpt={heroPost.excerpt}
-            />
-          )}
-          {morePosts.length > 0 && <MoreStories posts={morePosts} />}
+          <Grid gap={[2, 3]} columns={[1, 2, 4]}>
+            {allWorks.map((post) => (
+              <WorkPreview
+                key={post.title}
+                responsiveImage={post.coverImage.responsiveImage}
+                title={post.title}
+                href={post.slug}
+              />
+            ))}
+          </Grid>
         </Container>
       </Layout>
     </>
